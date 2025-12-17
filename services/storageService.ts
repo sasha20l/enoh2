@@ -1,10 +1,22 @@
-import { ChatMode, ChatSession, User } from "../types";
+import { ChatMode, ChatSession, User, AppConfig } from "../types";
 import { DEFAULT_MODES } from "../constants";
 
 const USERS_KEY = 'enoch_users';
 const CHATS_KEY = 'enoch_chats';
 const MODES_KEY = 'enoch_modes';
+const CONFIG_KEY = 'enoch_config';
 const CURRENT_USER_KEY = 'enoch_current_user_id';
+
+const DEFAULT_CONFIG: AppConfig = {
+  aiApiKey: '',
+  aiModel: 'gemini-2.5-flash',
+  dbHost: 'localhost',
+  dbPort: '5432',
+  dbUser: 'postgres',
+  dbPass: '',
+  dbName: 'enoch_db',
+  useMockDb: true
+};
 
 // Initialize defaults
 const initStorage = () => {
@@ -17,11 +29,23 @@ const initStorage = () => {
   if (!localStorage.getItem(USERS_KEY)) {
     localStorage.setItem(USERS_KEY, JSON.stringify([]));
   }
+  if (!localStorage.getItem(CONFIG_KEY)) {
+    localStorage.setItem(CONFIG_KEY, JSON.stringify(DEFAULT_CONFIG));
+  }
 };
 
 initStorage();
 
 export const StorageService = {
+  // --- Config ---
+  getConfig: (): AppConfig => {
+    return JSON.parse(localStorage.getItem(CONFIG_KEY) || JSON.stringify(DEFAULT_CONFIG));
+  },
+  
+  saveConfig: (config: AppConfig) => {
+    localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+  },
+
   // --- Auth ---
   loginOrRegister: (name: string): User => {
     const users: User[] = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');

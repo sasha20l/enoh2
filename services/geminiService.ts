@@ -1,19 +1,56 @@
 import { GoogleGenAI, Modality, Type } from "@google/genai";
 import { BASE_SYSTEM_INSTRUCTION } from "../constants";
 import { StructuredContent } from "../types";
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+import { StorageService } from "./storageService";
+import { RagService } from "./ragService";
 
 export const generateResponse = async (
   history: { role: string; parts: { text: string }[] }[],
   currentMessage: string,
   modeSystemPrompt: string
 ): Promise<StructuredContent> => {
+  const config = StorageService.getConfig();
+  const apiKey = config.aiApiKey || process.env.API_KEY || '';
+  const ai = new GoogleGenAI({ apiKey });
+
   try {
-    const model = "gemini-2.5-flash"; 
+    const model = config.aiModel || "gemini-2.5-flash"; 
     
-    // Combine Base Dogma + Specific Mode Instructions
-    const fullSystemInstruction = `${BASE_SYSTEM_INSTRUCTION}\n\n${modeSystemPrompt}`;
+    // --- RAG PIPELINE START ---
+    let retrievedContextString = "";
+    
+    // 1. Search DB (Mock or Real)
+    // Only if useMockDb is on (or we had a real backend connection)
+    if (config.useMockDb) {
+        console.log("RAG: Searching DB for:", currentMessage);
+        const verses = await RagService.searchVerses(currentMessage);
+        
+        if (verses.length > 0) {
+            const verseIds = verses.map(v => v.id);
+            const commentaries = await RagService.getCommentariesForVerses(verseIds);
+            
+            retrievedContextString = `
+            [[CONTEXT FROM DATABASE - USE THIS AS PRIMARY TRUTH]]
+            
+            FOUND VERSES:
+            ${verses.map(v => `ID:${v.id} | ${v.book_name} ${v.chapter}:${v.verse} | "${v.text}" | URL: ${v.azbyka_url || v.azbyka_url2}`).join('\n')}
+            
+            FOUND COMMENTARIES:
+            ${commentaries.map(c => `VerseID:${c.verse_id} | Author: ${c.author} | Source: ${c.source_title} | Text: "${c.text_plain}" | URL: ${c.azbyka_url || c.source_url}`).join('\n\n')}
+            
+            INSTRUCTIONS FOR CONTEXT:
+            1. If "FOUND VERSES" contains relevant answers, cite them in 'citedVerses' and set "dataSource": "db" and "azbykaUrl": [URL from context].
+            2. If you use "FOUND COMMENTARIES", summarize them and set "dataSource": "db", "sourceUrl": [URL from context].
+            3. Only search external knowledge if Database Context is insufficient.
+            `;
+        } else {
+            console.log("RAG: No results found in DB");
+        }
+    }
+    // --- RAG PIPELINE END ---
+
+    // Combine Base Dogma + Specific Mode Instructions + RAG Context
+    const fullSystemInstruction = `${BASE_SYSTEM_INSTRUCTION}\n\n${modeSystemPrompt}\n\n${retrievedContextString}`;
 
     // Convert history
     const contents = [
@@ -32,7 +69,7 @@ export const generateResponse = async (
       contents: contents,
       config: {
         systemInstruction: fullSystemInstruction,
-        temperature: 0.3, // Lower temperature for stricter adherence
+        temperature: 0.3,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -48,6 +85,8 @@ export const generateResponse = async (
                   book: { type: Type.STRING },
                   chapter: { type: Type.INTEGER },
                   verse: { type: Type.INTEGER },
+                  dataSource: { type: Type.STRING, enum: ['db', 'ai'] },
+                  azbykaUrl: { type: Type.STRING },
                   commentaries: {
                     type: Type.ARRAY,
                     items: {
@@ -55,14 +94,16 @@ export const generateResponse = async (
                       properties: {
                          author: { type: Type.STRING },
                          summary: { type: Type.STRING },
-                         source: { type: Type.STRING, description: "Exact book/letter title or 'Обобщение святоотеческого учения' if AI synthesized" },
-                         aiExplanation: { type: Type.STRING }
+                         source: { type: Type.STRING },
+                         sourceUrl: { type: Type.STRING },
+                         aiExplanation: { type: Type.STRING },
+                         dataSource: { type: Type.STRING, enum: ['db', 'ai'] }
                       },
-                      required: ["author", "summary", "source"]
+                      required: ["author", "summary", "source", "dataSource"]
                     }
                   }
                 },
-                required: ["reference", "text", "commentaries"]
+                required: ["reference", "text", "commentaries", "dataSource"]
               }
             }
           },
@@ -73,38 +114,10 @@ export const generateResponse = async (
 
     if (response.text) {
       let cleanText = response.text.trim();
-      
-      if (cleanText.startsWith('```json')) {
-        cleanText = cleanText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-      } else if (cleanText.startsWith('```')) {
-        cleanText = cleanText.replace(/^```\s*/, '').replace(/\s*```$/, '');
-      }
+      if (cleanText.startsWith('```json')) cleanText = cleanText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      else if (cleanText.startsWith('```')) cleanText = cleanText.replace(/^```\s*/, '').replace(/\s*```$/, '');
 
-      const firstBrace = cleanText.indexOf('{');
-      const lastBrace = cleanText.lastIndexOf('}');
-      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace >= firstBrace) {
-        cleanText = cleanText.substring(firstBrace, lastBrace + 1);
-      }
-
-      let parsed: any;
-      try {
-        parsed = JSON.parse(cleanText);
-      } catch (e) {
-        console.warn("JSON Parse Failed", cleanText);
-        const fallbackText = cleanText.replace(/^[\s\S]*?"pastoralResponse"\s*:\s*"/, '').split('",')[0].replace(/\\"/g, '"');
-        return {
-             pastoralResponse: fallbackText.length > 10 ? fallbackText : "Простите, ответ был получен, но я не смог его прочитать. Попробуйте перефразировать вопрос.",
-             citedVerses: []
-        };
-      }
-
-      // Runtime type check
-      if (!parsed || typeof parsed !== 'object') {
-        return {
-          pastoralResponse: "Простите, произошла ошибка обработки данных.",
-          citedVerses: []
-        };
-      }
+      const parsed = JSON.parse(cleanText);
 
       const safeContent: StructuredContent = {
         pastoralResponse: parsed.pastoralResponse || "Мир вам.",
@@ -114,11 +127,15 @@ export const generateResponse = async (
           book: v.book || "",
           chapter: v.chapter || 0,
           verse: v.verse || 0,
+          dataSource: v.dataSource === 'db' ? 'db' : 'ai',
+          azbykaUrl: v.azbykaUrl || undefined,
           commentaries: Array.isArray(v.commentaries) ? v.commentaries.map((c: any) => ({
              author: c.author || "Неизвестный автор",
              summary: c.summary || "",
              source: c.source || "Обобщение",
-             aiExplanation: c.aiExplanation || "" 
+             sourceUrl: c.sourceUrl || undefined,
+             aiExplanation: c.aiExplanation || "",
+             dataSource: c.dataSource === 'db' ? 'db' : 'ai'
           })) : []
         })) : [],
       };
@@ -127,7 +144,7 @@ export const generateResponse = async (
     }
     
     return {
-      pastoralResponse: "Простите, я не могу ответить на этот вопрос из-за ограничений безопасности или этики.",
+      pastoralResponse: "Простите, я не могу ответить на этот вопрос.",
       citedVerses: []
     };
 
@@ -140,36 +157,35 @@ export const generateResponse = async (
   }
 };
 
+// ... explanation and speech functions remain similar but should use StorageService.getConfig() for API keys if needed
 export const generateCommentaryExplanation = async (
   userQuery: string,
   verseText: string,
   commentarySummary: string
 ): Promise<string> => {
-  try {
+    const config = StorageService.getConfig();
+    const apiKey = config.aiApiKey || process.env.API_KEY || '';
+    const ai = new GoogleGenAI({ apiKey });
+    
+    try {
     const prompt = `
       ${BASE_SYSTEM_INSTRUCTION}
-      
       КОНТЕКСТ:
       Вопрос пользователя: "${userQuery}"
       Стих из Писания: "${verseText}"
       Толкование Святого Отца: "${commentarySummary}"
-      
       ЗАДАЧА:
       Объясни кратко (2-3 предложения), как именно это толкование отвечает на вопрос пользователя.
-      Вскрой духовную логику. Почему это толкование здесь уместно?
     `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: config.aiModel || "gemini-2.5-flash",
       contents: [{ parts: [{ text: prompt }] }],
-      config: {
-        temperature: 0.4,
-      }
+      config: { temperature: 0.4 }
     });
 
     return response.text || "Простите, не удалось сформировать пояснение.";
   } catch (error) {
-    console.error("Explanation Gen Error:", error);
     return "Простите, сейчас я не могу пояснить это толкование.";
   }
 };
@@ -202,6 +218,10 @@ async function decodeAudioData(
 }
 
 export const generateSpeech = async (text: string, voiceName: string = 'Fenrir'): Promise<string | null> => {
+  const config = StorageService.getConfig();
+  const apiKey = config.aiApiKey || process.env.API_KEY || '';
+  const ai = new GoogleGenAI({ apiKey });
+  
   try {
     const safeText = text.length > 500 ? text.substring(0, 500) + "..." : text;
     const response = await ai.models.generateContent({

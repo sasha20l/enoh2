@@ -10,14 +10,10 @@ interface RightPanelProps {
 
 export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGenerateExplanation }) => {
   const [expandedVerseIndex, setExpandedVerseIndex] = useState<number | null>(null);
-  // Track loading state for specific commentary explanation: `${verseIdx}-${commIdx}`
   const [loadingExplanation, setLoadingExplanation] = useState<string | null>(null);
-  
-  // State for Full Screen Reading Mode: stores indices to locate the commentary
   const [readingState, setReadingState] = useState<{vIdx: number, cIdx: number} | null>(null);
 
   useEffect(() => {
-    // Reset expansion when message changes
     setExpandedVerseIndex(null);
     setLoadingExplanation(null);
     setReadingState(null);
@@ -33,7 +29,21 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
     setLoadingExplanation(null);
   };
 
-  // Helper to render the AI Explanation Block (used in both sidebar and full screen)
+  const renderSourceBadge = (source: 'db' | 'ai') => {
+      if (source === 'db') {
+          return (
+              <span className="bg-emerald-100 text-emerald-800 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide border border-emerald-200">
+                Источник: БД
+              </span>
+          );
+      }
+      return (
+          <span className="bg-sky-100 text-sky-800 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide border border-sky-200">
+            Источник: ИИ
+          </span>
+      );
+  };
+
   const renderAIExplanationBlock = (
     verseIdx: number, 
     commIdx: number, 
@@ -79,7 +89,6 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
     );
   };
 
-  // Desktop Placeholder State (When no message selected)
   if (!isOpen) {
     return (
       <aside className="hidden lg:flex w-96 bg-white border-l border-sky-50 flex-col h-full transition-all duration-300">
@@ -93,7 +102,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
              <BookIcon className="w-8 h-8" />
            </div>
            <p className="font-body text-sm text-slate-400">
-             Нажмите на кнопку "Открыть источники" под ответом Еноха, чтобы увидеть Священное Писание и толкования Отцов.
+             Нажмите на кнопку "Открыть источники" под ответом Еноха, чтобы увидеть Священное Писание и толкования.
            </p>
         </div>
       </aside>
@@ -102,12 +111,8 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
 
   const content = message.content as StructuredContent;
   const citedVerses = content.citedVerses || [];
+  const toggleVerse = (idx: number) => setExpandedVerseIndex(expandedVerseIndex === idx ? null : idx);
 
-  const toggleVerse = (idx: number) => {
-    setExpandedVerseIndex(expandedVerseIndex === idx ? null : idx);
-  };
-
-  // Resolve current reading data for Modal
   const currentReading = readingState 
     ? {
         verse: citedVerses[readingState.vIdx],
@@ -128,15 +133,12 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
       {/* FULL SCREEN READING MODAL */}
       {currentReading && currentReading.comm && (
         <div className="fixed inset-0 z-[60] bg-white flex flex-col animate-in slide-in-from-bottom-5 fade-in duration-300">
-          {/* Modal Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-sky-100 bg-sky-50/30">
-             <div>
+             <div className="flex items-center gap-2">
                 <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
-                   Толкование
+                   {currentReading.comm.source || "Толкование"}
                 </span>
-                <h3 className="text-lg font-bold font-display text-slate-800 mt-1">
-                   {currentReading.comm.author}
-                </h3>
+                {renderSourceBadge(currentReading.comm.dataSource)}
              </div>
              <button 
                onClick={() => setReadingState(null)} 
@@ -146,7 +148,6 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
              </button>
           </div>
 
-          {/* Modal Content */}
           <div className="flex-1 overflow-y-auto p-6 md:p-12 md:max-w-3xl md:mx-auto w-full">
             <blockquote className="font-display text-xl md:text-2xl leading-relaxed text-slate-700 italic border-l-4 border-sky-200 pl-6 mb-8">
               «{currentReading.verse.text}»
@@ -155,21 +156,25 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
               </cite>
             </blockquote>
 
+            <h3 className="text-lg font-bold font-display text-slate-800 mb-4">
+               {currentReading.comm.author}
+            </h3>
+
             <div className="prose prose-slate prose-lg max-w-none font-body text-slate-600 leading-loose">
                {currentReading.comm.summary.split('\n').map((paragraph, i) => (
                  <p key={i} className="mb-4">{paragraph}</p>
                ))}
             </div>
 
-            {currentReading.comm.source && (
-               <div className="mt-8 text-right text-sm text-sky-400 italic">
-                 Источник: {currentReading.comm.source}
+            {currentReading.comm.sourceUrl && (
+               <div className="mt-8 text-right">
+                 <a href={currentReading.comm.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-sky-500 hover:underline italic">
+                   Читать оригинал на Azbyka.ru →
+                 </a>
                </div>
             )}
             
-            <div className="h-12"></div> {/* Spacer */}
-
-            {/* AI Explanation Footer in Modal */}
+            <div className="h-12"></div>
             <div className="bg-sky-50/50 rounded-2xl p-6 border border-sky-100">
                {renderAIExplanationBlock(
                  currentReading.vIdx, 
@@ -179,7 +184,6 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
                  currentReading.comm.aiExplanation
                )}
             </div>
-            
             <div className="h-8"></div>
           </div>
         </div>
@@ -199,7 +203,6 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
               Источники Истины
             </h3>
           </div>
-          {/* Mobile Close Button */}
           <button onClick={onClose} className="lg:hidden p-1 -mr-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100">
             <CrossIcon className="w-6 h-6" />
           </button>
@@ -215,33 +218,40 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
 
                  return (
                    <div key={idx} className={`bg-white rounded-xl border transition-all duration-300 ${isExpanded ? 'border-sky-300 shadow-md' : 'border-sky-100 hover:border-sky-200'}`}>
-                     {/* Verse Header (Clickable) */}
                      <div 
                        className="p-5 cursor-pointer select-none"
                        onClick={() => toggleVerse(idx)}
                      >
                        <div className="flex justify-between items-start mb-2">
-                          <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
-                            Канон (Библия)
-                          </span>
+                          <div className="flex gap-2">
+                              <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
+                                Библия
+                              </span>
+                              {renderSourceBadge(verse.dataSource)}
+                          </div>
                           <ChevronDownIcon className={`w-4 h-4 text-slate-300 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                        </div>
                        
-                       <div className="text-sky-700 font-display font-bold text-sm mb-2">
+                       <div className="text-sky-700 font-display font-bold text-sm mb-2 mt-2">
                          {verse.reference}
                        </div>
                        <p className="text-sm font-body text-slate-700 leading-relaxed italic">
                          «{verse.text}»
                        </p>
                        
-                       {!isExpanded && (
-                         <p className="text-[10px] text-sky-400 mt-3 font-medium text-center">
-                           Нажмите, чтобы открыть толкование
-                         </p>
-                       )}
+                        {verse.azbykaUrl && (
+                             <a 
+                               href={verse.azbykaUrl} 
+                               target="_blank" 
+                               rel="noreferrer" 
+                               onClick={(e) => e.stopPropagation()}
+                               className="text-[10px] text-sky-400 mt-2 block hover:underline"
+                             >
+                               Открыть на Азбуке →
+                             </a>
+                        )}
                      </div>
 
-                     {/* Commentaries (Expanded) */}
                      {isExpanded && (
                        hasCommentaries ? (
                          <div className="border-t border-sky-50 bg-sky-50/30 p-5 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
@@ -253,13 +263,13 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
                              
                              return (
                                <div key={cIdx} className="bg-white p-4 rounded-lg border border-sky-100 shadow-sm relative overflow-hidden group">
-                                 {/* Decorative accent */}
                                  <div className="absolute top-0 left-0 w-1 h-full bg-sky-200"></div>
                                  
-                                 <div className="flex items-center gap-2 mb-2 pl-2">
+                                 <div className="flex items-center justify-between mb-2 pl-2">
                                     <span className="bg-slate-100 text-slate-600 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">
-                                      Источник
+                                      {comm.source || "Источник"}
                                     </span>
+                                    {renderSourceBadge(comm.dataSource)}
                                  </div>
 
                                  <div className="pl-2">
@@ -267,17 +277,12 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
                                      {comm.author}
                                    </div>
                                    
-                                   {/* Text Content */}
                                    <div className="relative">
                                       <p className={`text-xs font-body text-slate-600 leading-relaxed mb-2 ${isLong ? 'line-clamp-4' : ''}`}>
                                         {comm.summary}
                                       </p>
-                                      {isLong && (
-                                        <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent md:hidden"></div>
-                                      )}
                                    </div>
 
-                                   {/* Read Full Button */}
                                    {isLong && (
                                      <button 
                                       onClick={() => setReadingState({vIdx: idx, cIdx})}
@@ -287,15 +292,14 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
                                        Читать полностью
                                      </button>
                                    )}
-
-                                   {comm.source && (
-                                     <p className="text-[10px] text-sky-400 italic text-right">
-                                       — {comm.source}
-                                     </p>
+                                   
+                                   {comm.sourceUrl && (
+                                        <a href={comm.sourceUrl} target="_blank" rel="noreferrer" className="text-[9px] text-sky-400 italic hover:underline">
+                                            Ссылка на источник →
+                                        </a>
                                    )}
                                  </div>
 
-                                 {/* Enoch's Explanation (AI) - Sidebar Version */}
                                  <div className="pl-2">
                                     {renderAIExplanationBlock(idx, cIdx, verse.text, comm.summary, comm.aiExplanation)}
                                  </div>
@@ -306,7 +310,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
                        ) : (
                          <div className="border-t border-sky-50 bg-sky-50/20 p-6 text-center animate-in fade-in">
                            <p className="text-xs text-slate-400 italic">
-                             Для этого стиха Енох не нашел прямых толкований, но он важен для контекста ответа.
+                             Толкований из БД не найдено.
                            </p>
                          </div>
                        )
@@ -318,7 +322,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
           ) : (
             <div className="text-center mt-10 p-6 bg-white rounded-2xl border border-sky-100 border-dashed">
               <p className="text-sm text-slate-400 italic">
-                В этом ответе Енох говорит от своего сердца, опираясь на общий дух учения, без прямых цитат.
+                Ответ сформирован без прямых цитат из БД.
               </p>
             </div>
           )}

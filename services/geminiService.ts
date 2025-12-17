@@ -201,7 +201,7 @@ async function decodeAudioData(
   }
 }
 
-export const generateSpeech = async (text: string): Promise<string | null> => {
+export const generateSpeech = async (text: string, voiceName: string = 'Fenrir'): Promise<string | null> => {
   try {
     const safeText = text.length > 500 ? text.substring(0, 500) + "..." : text;
     const response = await ai.models.generateContent({
@@ -211,7 +211,7 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
           voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Fenrir' },
+            prebuiltVoiceConfig: { voiceName: voiceName },
           },
         },
       },

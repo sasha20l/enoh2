@@ -3,10 +3,10 @@ import { Sidebar } from './components/Sidebar';
 import { ChatArea } from './components/ChatArea';
 import { InputArea } from './components/InputArea';
 import { RightPanel } from './components/RightPanel';
-import { MenuIcon } from './components/Icons';
+import { MenuIcon, MicIcon } from './components/Icons';
 import { LoginScreen } from './components/LoginScreen';
 import { AdminPanel } from './components/AdminPanel';
-import { ChatSession, Message, MessageRole, ChatMode, User } from './types';
+import { ChatSession, Message, MessageRole, ChatMode, User, StructuredContent } from './types';
 import { generateResponse, generateSpeech, playAudio, generateCommentaryExplanation } from './services/geminiService';
 import { StorageService } from './services/storageService';
 
@@ -17,6 +17,7 @@ const App: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
+  const [autoPlayEnabled, setAutoPlayEnabled] = useState(false);
   
   // Modes State
   const [modes, setModes] = useState<ChatMode[]>([]);
@@ -62,6 +63,15 @@ const App: React.FC = () => {
   const activeChat = chats.find(c => c.id === activeChatId) || null;
   const selectedMessage = activeChat ? activeChat.messages.find(m => m.id === selectedMessageId) || null : null;
   const currentMode = modes.find(m => m.id === currentModeId) || modes[0];
+
+  const handlePlayAudio = async (text: string) => {
+    // Get voice from current mode or default
+    const usedMode = modes.find(m => m.id === currentModeId) || modes[0];
+    const voiceName = usedMode.voiceName || 'Fenrir';
+    
+    const base64Audio = await generateSpeech(text, voiceName);
+    if (base64Audio) await playAudio(base64Audio);
+  };
 
   const handleSendMessage = async (text: string) => {
     if (!currentUser) return;
@@ -148,6 +158,14 @@ const App: React.FC = () => {
 
       setSelectedMessageId(modelMsg.id);
 
+      // Auto Play if enabled
+      if (autoPlayEnabled) {
+          const responseText = structuredResponse.pastoralResponse;
+          if (responseText) {
+              await handlePlayAudio(responseText);
+          }
+      }
+
     } catch (error) {
       console.error("Chat Error", error);
     } finally {
@@ -172,11 +190,6 @@ const App: React.FC = () => {
     setActiveChatId(newChat.id);
     setSelectedMessageId(null);
     setSidebarOpen(false);
-  };
-
-  const handlePlayAudio = async (text: string) => {
-    const base64Audio = await generateSpeech(text);
-    if (base64Audio) await playAudio(base64Audio);
   };
 
   const handleGenerateExplanation = async (messageId: string, verseIdx: number, commentaryIdx: number, verseText: string, summary: string) => {
@@ -290,6 +303,10 @@ const App: React.FC = () => {
                           className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 ${currentModeId === mode.id ? 'bg-sky-50 text-sky-700 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
                         >
                            <span>{mode.name}</span>
+                           {/* Small voice indicator in dropdown */}
+                           <span className="text-[9px] text-slate-400 bg-slate-100 px-1 rounded ml-auto">
+                              {mode.voiceName || 'Def'}
+                           </span>
                         </button>
                       ))}
                    </div>
@@ -298,6 +315,15 @@ const App: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
+             {/* Auto Play Toggle */}
+             <button 
+               onClick={() => setAutoPlayEnabled(!autoPlayEnabled)}
+               className={`p-2 rounded-full transition-all border ${autoPlayEnabled ? 'bg-sky-500 text-white border-sky-500' : 'bg-white text-slate-300 border-slate-100 hover:text-sky-500'}`}
+               title={autoPlayEnabled ? "Авто-озвучивание включено" : "Включить авто-озвучивание"}
+             >
+                <MicIcon className="w-5 h-5" active={autoPlayEnabled} />
+             </button>
+
              <div className="w-8 h-8 bg-sky-100 rounded-full flex items-center justify-center text-sky-600 font-bold text-sm cursor-pointer" onClick={handleLogout} title="Выйти">
                 {currentUser.name[0].toUpperCase()}
              </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ChatMode } from '../types';
 import { StorageService } from '../services/storageService';
 import { CrossIcon, SendIcon } from './Icons';
+import { VOICE_OPTIONS } from '../constants';
 
 interface AdminPanelProps {
   onClose: () => void;
@@ -42,6 +43,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
       name: 'Новый режим',
       description: 'Описание режима...',
       icon: 'message',
+      voiceName: 'Fenrir',
       systemPrompt: 'Инструкция для нейросети...'
     });
   };
@@ -79,6 +81,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                   <span className="text-[10px] text-slate-400 uppercase">{mode.icon}</span>
                 </div>
                 <p className="text-xs text-slate-500 mt-1 line-clamp-2">{mode.description}</p>
+                <span className="text-[9px] text-sky-500 bg-sky-50 px-1.5 py-0.5 rounded mt-2 inline-block">
+                    Голос: {mode.voiceName || 'Default'}
+                </span>
               </div>
             ))}
           </div>
@@ -104,6 +109,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                    value={editingMode.description}
                    onChange={e => setEditingMode({...editingMode, description: e.target.value})}
                  />
+               </div>
+
+               <div>
+                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Голос Еноха</label>
+                 <p className="text-[10px] text-slate-400 mb-2">
+                    Выберите тембр, которым Енох будет зачитывать ответы в этом режиме.
+                 </p>
+                 <select
+                   className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:border-sky-400 outline-none text-sm"
+                   value={editingMode.voiceName || 'Fenrir'}
+                   onChange={e => setEditingMode({...editingMode, voiceName: e.target.value})}
+                 >
+                   {VOICE_OPTIONS.map(voice => (
+                       <option key={voice.id} value={voice.id}>{voice.name}</option>
+                   ))}
+                 </select>
                </div>
 
                <div>

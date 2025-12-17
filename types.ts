@@ -61,4 +61,5 @@ export interface ChatMode {
   description: string;
   systemPrompt: string; // Specific instructions for this mode
   icon: string; // Icon name
+  voiceName?: string; // Voice specifically for this mode
 }

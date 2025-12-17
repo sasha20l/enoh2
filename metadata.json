@@ -1,0 +1,7 @@
+{
+  "name": "Copy of Енох (Enoch)",
+  "description": "Единая нейросеть ортодоксального Христианства. Духовный наставник и собеседник.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

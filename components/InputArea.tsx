@@ -64,9 +64,9 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSendMessage, isLoading }
   };
 
   return (
-    <div className="bg-white/80 backdrop-blur-md p-6 md:p-8 border-t border-sky-50">
+    <div className="bg-white/80 backdrop-blur-md p-6 md:p-8 border-t border-brand-50">
       <div className="max-w-4xl mx-auto flex items-end gap-3 relative">
-        <div className="flex-1 bg-white rounded-2xl border border-sky-100 shadow-sm focus-within:border-sky-300 focus-within:ring-4 focus-within:ring-sky-50 transition-all duration-300">
+        <div className="flex-1 bg-white rounded-box border border-brand-100 shadow-sm focus-within:border-brand-300 focus-within:ring-4 focus-within:ring-brand-50 transition-all duration-300">
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -80,10 +80,10 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSendMessage, isLoading }
         <button 
           onClick={toggleListening}
           className={`
-            p-4 rounded-2xl transition-all duration-300 shadow-sm border
+            p-4 rounded-box transition-all duration-300 shadow-sm border
             ${isListening 
               ? 'bg-red-50 text-red-500 border-red-100 animate-pulse' 
-              : 'bg-white text-slate-400 border-sky-100 hover:text-sky-500 hover:border-sky-200'}
+              : 'bg-white text-slate-400 border-brand-100 hover:text-brand-500 hover:border-brand-200'}
           `}
           title="Голос"
         >
@@ -94,10 +94,10 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSendMessage, isLoading }
           onClick={handleSend}
           disabled={!input.trim() || isLoading}
           className={`
-            p-4 rounded-2xl transition-all duration-300 shadow-md
+            p-4 rounded-box transition-all duration-300 shadow-md
             ${!input.trim() || isLoading
               ? 'bg-slate-100 text-slate-300 cursor-not-allowed'
-              : 'bg-sky-500 text-white hover:bg-sky-600 hover:shadow-lg hover:-translate-y-0.5'}
+              : 'bg-brand-500 text-white hover:bg-brand-600 hover:shadow-lg hover:-translate-y-0.5'}
           `}
           title="Отправить"
         >

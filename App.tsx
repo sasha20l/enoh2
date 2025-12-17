@@ -9,6 +9,7 @@ import { AdminPanel } from './components/AdminPanel';
 import { ChatSession, Message, MessageRole, ChatMode, User, StructuredContent } from './types';
 import { generateResponse, generateSpeech, playAudio, generateCommentaryExplanation } from './services/geminiService';
 import { StorageService } from './services/storageService';
+import { ALL_THEMES, ThemeService } from './services/themeService';
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -34,7 +35,23 @@ const App: React.FC = () => {
     const storedModes = StorageService.getModes();
     setModes(storedModes);
     if (storedModes.length > 0) setCurrentModeId(storedModes[0].id);
+
+    // Init Theme
+    const config = StorageService.getConfig();
+    const theme = ALL_THEMES.find(t => t.id === config.currentThemeId) || ALL_THEMES[0];
+    ThemeService.applyTheme(theme);
+
   }, []);
+
+  // Update theme listener (simple way)
+  useEffect(() => {
+    if (!showAdminPanel) {
+        // Re-apply config when closing admin panel in case it changed
+        const config = StorageService.getConfig();
+        const theme = ALL_THEMES.find(t => t.id === config.currentThemeId) || ALL_THEMES[0];
+        ThemeService.applyTheme(theme);
+    }
+  }, [showAdminPanel]);
 
   const loadUserData = (userId: string) => {
     const userChats = StorageService.getChats(userId);
@@ -256,7 +273,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#FAFAF9]">
+    <div className="flex h-screen overflow-hidden bg-appbg transition-colors duration-500">
       <Sidebar 
         chats={chats} 
         activeChatId={activeChatId || ''} 
@@ -275,20 +292,20 @@ const App: React.FC = () => {
 
       <main className="flex-1 flex flex-col h-full relative w-full shadow-xl z-10 transition-all duration-300">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E6DEC6] bg-white">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-brand-200 bg-white/80 backdrop-blur">
           <div className="flex items-center gap-4">
-             <button onClick={() => setSidebarOpen(true)} className="md:hidden p-2 -ml-2 text-[#2C2420]">
+             <button onClick={() => setSidebarOpen(true)} className="md:hidden p-2 -ml-2 text-slate-700">
                 <MenuIcon className="w-6 h-6" />
              </button>
              
              {/* Mode Selector */}
              <div className="relative group">
-                <button className="flex items-center gap-2 px-3 py-1.5 bg-sky-50 rounded-lg hover:bg-sky-100 transition-colors">
-                  <span className="text-xs font-bold text-sky-700 uppercase tracking-wide">
+                <button className="flex items-center gap-2 px-3 py-1.5 bg-brand-50 rounded-box hover:bg-brand-100 transition-colors">
+                  <span className="text-xs font-bold text-brand-700 uppercase tracking-wide">
                      Режим: {currentMode?.name}
                   </span>
                 </button>
-                <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-sky-100 hidden group-hover:block z-50">
+                <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-box shadow-xl border border-brand-100 hidden group-hover:block z-50">
                    <div className="p-2 space-y-1">
                       {modes.map(mode => (
                         <button 
@@ -300,7 +317,7 @@ const App: React.FC = () => {
                                setChats(updated);
                             }
                           }}
-                          className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 ${currentModeId === mode.id ? 'bg-sky-50 text-sky-700 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 ${currentModeId === mode.id ? 'bg-brand-50 text-brand-700 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
                         >
                            <span>{mode.name}</span>
                            {/* Small voice indicator in dropdown */}
@@ -318,13 +335,13 @@ const App: React.FC = () => {
              {/* Auto Play Toggle */}
              <button 
                onClick={() => setAutoPlayEnabled(!autoPlayEnabled)}
-               className={`p-2 rounded-full transition-all border ${autoPlayEnabled ? 'bg-sky-500 text-white border-sky-500' : 'bg-white text-slate-300 border-slate-100 hover:text-sky-500'}`}
+               className={`p-2 rounded-full transition-all border ${autoPlayEnabled ? 'bg-brand-500 text-white border-brand-500' : 'bg-white text-slate-300 border-brand-100 hover:text-brand-500'}`}
                title={autoPlayEnabled ? "Авто-озвучивание включено" : "Включить авто-озвучивание"}
              >
                 <MicIcon className="w-5 h-5" active={autoPlayEnabled} />
              </button>
 
-             <div className="w-8 h-8 bg-sky-100 rounded-full flex items-center justify-center text-sky-600 font-bold text-sm cursor-pointer" onClick={handleLogout} title="Выйти">
+             <div className="w-8 h-8 bg-brand-100 rounded-full flex items-center justify-center text-brand-600 font-bold text-sm cursor-pointer" onClick={handleLogout} title="Выйти">
                 {currentUser.name[0].toUpperCase()}
              </div>
           </div>

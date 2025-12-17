@@ -47,7 +47,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <aside 
         className={`
           fixed md:relative z-30
-          w-72 h-full bg-white border-r border-sky-100
+          w-72 h-full bg-white border-r border-brand-100
           transform transition-transform duration-300 ease-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
           flex flex-col shadow-xl md:shadow-none
@@ -56,7 +56,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Header */}
         <div className="p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center">
               <span className="font-display font-bold text-lg">Е</span>
             </div>
             <div>
@@ -64,7 +64,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <span className="text-[11px] text-slate-400 font-medium">Светлый ИИ</span>
             </div>
           </div>
-          <button onClick={onNewChat} className="p-2 hover:bg-sky-50 rounded-full transition-all text-sky-500 hover:text-sky-700" title="Новая беседа">
+          <button onClick={onNewChat} className="p-2 hover:bg-brand-50 rounded-full transition-all text-brand-500 hover:text-brand-700" title="Новая беседа">
             <span className="text-2xl font-light leading-none">+</span>
           </button>
         </div>
@@ -76,7 +76,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
              <div className="px-2 mb-4">
                 <button 
                   onClick={() => { onOpenAdmin(); onClose(); }}
-                  className="w-full flex items-center gap-2 px-4 py-3 bg-slate-800 text-white rounded-xl shadow-md hover:bg-slate-700 transition-colors"
+                  className="w-full flex items-center gap-2 px-4 py-3 bg-slate-800 text-white rounded-box shadow-md hover:bg-slate-700 transition-colors"
                 >
                   <span className="text-lg">⚙️</span>
                   <span className="text-xs font-bold uppercase tracking-wider">Админ-панель</span>
@@ -90,7 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             return (
               <div key={folder.id} className="space-y-3">
-                <div className="flex items-center gap-2 px-3 text-sky-400">
+                <div className="flex items-center gap-2 px-3 text-brand-400">
                   {getIcon(folder.icon, "w-4 h-4")}
                   <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
                     {folder.name}
@@ -106,9 +106,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       key={chat.id}
                       onClick={() => { onSelectChat(chat.id); onClose(); }}
                       className={`
-                        w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200
+                        w-full text-left px-4 py-3 rounded-box text-sm font-medium transition-all duration-200
                         ${activeChatId === chat.id 
-                          ? 'bg-sky-50 text-sky-900 shadow-sm' 
+                          ? 'bg-brand-50 text-brand-900 shadow-sm' 
                           : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}
                       `}
                     >
@@ -124,7 +124,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* User Profile Stub */}
         <div className="p-4 border-t border-slate-50 bg-slate-50/50">
           <div className="flex items-center gap-3 text-sm">
-             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-sky-400 to-sky-600 text-white flex items-center justify-center font-bold shadow-md">
+             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-white flex items-center justify-center font-bold shadow-md">
                {currentUser?.name[0].toUpperCase()}
              </div>
              <div className="overflow-hidden">

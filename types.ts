@@ -96,6 +96,27 @@ export interface ChatMode {
   voiceName?: string;
 }
 
+export interface Theme {
+  id: string;
+  name: string;
+  colors: {
+    50: string;
+    100: string;
+    200: string;
+    300: string;
+    400: string;
+    500: string;
+    600: string;
+    700: string;
+    800: string;
+    900: string;
+    950: string;
+  };
+  borderRadius: string; // e.g. '0px', '0.5rem', '1rem', '1.5rem'
+  fontSerif?: string;
+  fontSans?: string;
+}
+
 export interface AppConfig {
   // AI Settings
   aiApiKey: string;
@@ -107,5 +128,8 @@ export interface AppConfig {
   dbUser: string;
   dbPass: string;
   dbName: string;
-  useMockDb: boolean; // Toggle between "Real" (Simulated) and Pure AI
+  useMockDb: boolean; 
+  
+  // UI Settings
+  currentThemeId: string;
 }

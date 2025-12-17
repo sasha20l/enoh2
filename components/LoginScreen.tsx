@@ -17,10 +17,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F0F9FF] flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 border border-sky-100">
+    <div className="min-h-screen bg-appbg flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white rounded-box shadow-xl p-8 border border-brand-100">
         <div className="text-center mb-8">
-           <div className="w-20 h-20 bg-sky-50 rounded-2xl text-sky-600 flex items-center justify-center mx-auto mb-4 text-4xl font-display font-bold">
+           <div className="w-20 h-20 bg-brand-50 rounded-2xl text-brand-600 flex items-center justify-center mx-auto mb-4 text-4xl font-display font-bold">
               Е
            </div>
            <h1 className="text-3xl font-display font-bold text-slate-800 mb-2">Енох</h1>
@@ -37,7 +37,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Введите ваше имя"
-              className="w-full px-5 py-3 rounded-xl border border-sky-200 focus:border-sky-400 focus:ring-4 focus:ring-sky-50 outline-none transition-all"
+              className="w-full px-5 py-3 rounded-box border border-brand-200 focus:border-brand-400 focus:ring-4 focus:ring-brand-50 outline-none transition-all"
               autoFocus
             />
             <p className="text-[10px] text-slate-400 mt-2 ml-1">
@@ -48,7 +48,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
           <button 
             type="submit"
             disabled={!name.trim()}
-            className="w-full bg-sky-500 text-white py-3 rounded-xl font-medium hover:bg-sky-600 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-brand-500 text-white py-3 rounded-box font-medium hover:bg-brand-600 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Войти в общение
           </button>

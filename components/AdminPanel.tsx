@@ -3,13 +3,14 @@ import { ChatMode, AppConfig } from '../types';
 import { StorageService } from '../services/storageService';
 import { CrossIcon } from './Icons';
 import { VOICE_OPTIONS } from '../constants';
+import { ALL_THEMES, ThemeService } from '../services/themeService';
 
 interface AdminPanelProps {
   onClose: () => void;
 }
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
-  const [activeTab, setActiveTab] = useState<'modes' | 'settings'>('modes');
+  const [activeTab, setActiveTab] = useState<'modes' | 'settings' | 'themes'>('themes');
   
   // Modes State
   const [modes, setModes] = useState<ChatMode[]>([]);
@@ -58,25 +59,37 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     });
   };
 
+  const applyThemePreview = (themeId: string) => {
+      setConfig({...config, currentThemeId: themeId});
+      const theme = ALL_THEMES.find(t => t.id === themeId);
+      if (theme) ThemeService.applyTheme(theme);
+  };
+
   return (
     <div className="fixed inset-0 bg-white z-[100] flex flex-col">
-      <div className="px-8 py-5 border-b border-sky-100 flex items-center justify-between bg-sky-50/50">
+      <div className="px-8 py-5 border-b border-brand-100 flex items-center justify-between bg-brand-50/50">
         <div className="flex items-center gap-6">
           <div>
             <h2 className="text-xl font-bold font-display text-slate-800">Панель Администратора</h2>
           </div>
           <div className="flex bg-white rounded-lg p-1 border border-slate-200">
              <button 
+               onClick={() => setActiveTab('themes')}
+               className={`px-4 py-1.5 text-xs font-bold uppercase rounded-md transition-all ${activeTab === 'themes' ? 'bg-brand-500 text-white shadow-sm' : 'text-slate-500 hover:text-brand-600'}`}
+             >
+               Внешний вид
+             </button>
+             <button 
                onClick={() => setActiveTab('modes')}
-               className={`px-4 py-1.5 text-xs font-bold uppercase rounded-md transition-all ${activeTab === 'modes' ? 'bg-sky-500 text-white shadow-sm' : 'text-slate-500 hover:text-sky-600'}`}
+               className={`px-4 py-1.5 text-xs font-bold uppercase rounded-md transition-all ${activeTab === 'modes' ? 'bg-brand-500 text-white shadow-sm' : 'text-slate-500 hover:text-brand-600'}`}
              >
                Режимы
              </button>
              <button 
                onClick={() => setActiveTab('settings')}
-               className={`px-4 py-1.5 text-xs font-bold uppercase rounded-md transition-all ${activeTab === 'settings' ? 'bg-sky-500 text-white shadow-sm' : 'text-slate-500 hover:text-sky-600'}`}
+               className={`px-4 py-1.5 text-xs font-bold uppercase rounded-md transition-all ${activeTab === 'settings' ? 'bg-brand-500 text-white shadow-sm' : 'text-slate-500 hover:text-brand-600'}`}
              >
-               Подключения (БД/ИИ)
+               Настройки
              </button>
           </div>
         </div>
@@ -86,13 +99,60 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
       </div>
 
       <div className="flex-1 overflow-hidden bg-white">
-        {activeTab === 'modes' ? (
+        {activeTab === 'themes' && (
+           <div className="p-8 h-full overflow-y-auto">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-bold text-slate-800">Выберите стиль оформления ({ALL_THEMES.length} вариантов)</h3>
+                <button 
+                   onClick={handleSaveConfig}
+                   className="bg-brand-600 text-white px-6 py-2 rounded-box font-bold hover:bg-brand-700 shadow-md"
+                >
+                   Применить стиль
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                 {ALL_THEMES.map(theme => (
+                    <button
+                       key={theme.id}
+                       onClick={() => applyThemePreview(theme.id)}
+                       className={`
+                         group relative p-4 border-2 rounded-xl text-left transition-all hover:scale-105
+                         ${config.currentThemeId === theme.id ? 'border-brand-500 ring-2 ring-brand-100 bg-brand-50' : 'border-slate-100 bg-white hover:border-brand-200'}
+                       `}
+                    >
+                       <div className="flex items-center gap-3 mb-3">
+                          <div 
+                            className="w-8 h-8 flex items-center justify-center text-white font-bold text-xs shadow-sm"
+                            style={{ 
+                                backgroundColor: theme.colors[500], 
+                                borderRadius: theme.borderRadius 
+                            }}
+                          >
+                             Е
+                          </div>
+                          <div className="text-xs font-bold text-slate-600 group-hover:text-brand-600">
+                             {theme.name}
+                          </div>
+                       </div>
+                       
+                       <div className="space-y-1">
+                          <div className="h-2 w-full rounded-full" style={{ backgroundColor: theme.colors[100] }}></div>
+                          <div className="h-2 w-2/3 rounded-full" style={{ backgroundColor: theme.colors[300] }}></div>
+                       </div>
+                    </button>
+                 ))}
+              </div>
+           </div>
+        )}
+
+        {activeTab === 'modes' && (
             <div className="flex h-full">
                 {/* Mode List */}
-                <div className="w-1/3 border-r border-sky-100 overflow-y-auto bg-slate-50 p-4">
+                <div className="w-1/3 border-r border-brand-100 overflow-y-auto bg-slate-50 p-4">
                   <div className="flex justify-between items-center mb-4 px-2">
                     <h3 className="font-bold text-slate-700">Список Режимов</h3>
-                    <button onClick={handleAddNewMode} className="text-xs bg-sky-500 text-white px-3 py-1 rounded-full hover:bg-sky-600">
+                    <button onClick={handleAddNewMode} className="text-xs bg-brand-500 text-white px-3 py-1 rounded-full hover:bg-brand-600">
                       + Создать
                     </button>
                   </div>
@@ -100,7 +160,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                     {modes.map(mode => (
                       <div 
                         key={mode.id} 
-                        className={`p-4 rounded-xl cursor-pointer border transition-all ${editingMode?.id === mode.id ? 'bg-white border-sky-300 shadow-md' : 'bg-white border-transparent hover:border-sky-200'}`}
+                        className={`p-4 rounded-xl cursor-pointer border transition-all ${editingMode?.id === mode.id ? 'bg-white border-brand-300 shadow-md' : 'bg-white border-transparent hover:border-brand-200'}`}
                         onClick={() => setEditingMode(mode)}
                       >
                         <div className="flex justify-between">
@@ -108,7 +168,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                           <span className="text-[10px] text-slate-400 uppercase">{mode.icon}</span>
                         </div>
                         <p className="text-xs text-slate-500 mt-1 line-clamp-2">{mode.description}</p>
-                        <span className="text-[9px] text-sky-500 bg-sky-50 px-1.5 py-0.5 rounded mt-2 inline-block">
+                        <span className="text-[9px] text-brand-500 bg-brand-50 px-1.5 py-0.5 rounded mt-2 inline-block">
                             Голос: {mode.voiceName || 'Default'}
                         </span>
                       </div>
@@ -123,7 +183,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                        <div>
                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Название</label>
                          <input 
-                           className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:border-sky-400 outline-none font-bold text-lg"
+                           className="w-full p-3 bg-slate-50 border border-slate-200 rounded-box focus:border-brand-400 outline-none font-bold text-lg"
                            value={editingMode.name}
                            onChange={e => setEditingMode({...editingMode, name: e.target.value})}
                          />
@@ -132,7 +192,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                        <div>
                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Описание</label>
                          <input 
-                           className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:border-sky-400 outline-none text-sm"
+                           className="w-full p-3 bg-slate-50 border border-slate-200 rounded-box focus:border-brand-400 outline-none text-sm"
                            value={editingMode.description}
                            onChange={e => setEditingMode({...editingMode, description: e.target.value})}
                          />
@@ -141,7 +201,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                        <div>
                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Голос Еноха</label>
                          <select
-                           className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:border-sky-400 outline-none text-sm"
+                           className="w-full p-3 bg-slate-50 border border-slate-200 rounded-box focus:border-brand-400 outline-none text-sm"
                            value={editingMode.voiceName || 'Fenrir'}
                            onChange={e => setEditingMode({...editingMode, voiceName: e.target.value})}
                          >
@@ -154,14 +214,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                        <div>
                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">System Prompt</label>
                          <textarea 
-                           className="w-full p-4 bg-slate-900 text-slate-200 border border-slate-700 rounded-lg focus:border-sky-500 outline-none font-mono text-sm leading-relaxed h-96"
+                           className="w-full p-4 bg-slate-900 text-slate-200 border border-slate-700 rounded-box focus:border-brand-500 outline-none font-mono text-sm leading-relaxed h-96"
                            value={editingMode.systemPrompt}
                            onChange={e => setEditingMode({...editingMode, systemPrompt: e.target.value})}
                          />
                        </div>
 
                        <div className="flex gap-4 pt-4">
-                         <button onClick={handleSaveModes} className="flex-1 bg-sky-500 text-white py-3 rounded-lg font-bold hover:bg-sky-600 transition-colors">
+                         <button onClick={handleSaveModes} className="flex-1 bg-brand-500 text-white py-3 rounded-box font-bold hover:bg-brand-600 transition-colors">
                            Сохранить
                          </button>
                          <button onClick={() => handleDeleteMode(editingMode.id)} className="px-6 text-red-400 hover:text-red-600 font-medium">
@@ -176,13 +236,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                   )}
                 </div>
             </div>
-        ) : (
+        )}
+
+        {activeTab === 'settings' && (
             <div className="p-8 max-w-4xl mx-auto overflow-y-auto h-full">
                 <h3 className="text-lg font-bold text-slate-800 mb-6">Конфигурация Подключений</h3>
                 
                 {/* AI Config */}
-                <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 mb-8">
-                    <h4 className="text-sm font-bold uppercase tracking-wider text-sky-600 mb-4 flex items-center gap-2">
+                <div className="bg-slate-50 p-6 rounded-box border border-slate-200 mb-8">
+                    <h4 className="text-sm font-bold uppercase tracking-wider text-brand-600 mb-4 flex items-center gap-2">
                         🤖 Настройки Нейросети (LLM)
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -190,7 +252,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                             <label className="block text-xs font-bold text-slate-500 mb-2">Google Gemini API Key</label>
                             <input 
                                 type="password"
-                                className="w-full p-3 bg-white border border-slate-200 rounded-lg"
+                                className="w-full p-3 bg-white border border-slate-200 rounded-box"
                                 placeholder="Введите ключ..."
                                 value={config.aiApiKey}
                                 onChange={e => setConfig({...config, aiApiKey: e.target.value})}
@@ -199,7 +261,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                          <div>
                             <label className="block text-xs font-bold text-slate-500 mb-2">Модель</label>
                             <select 
-                                className="w-full p-3 bg-white border border-slate-200 rounded-lg"
+                                className="w-full p-3 bg-white border border-slate-200 rounded-box"
                                 value={config.aiModel}
                                 onChange={e => setConfig({...config, aiModel: e.target.value})}
                             >
@@ -212,13 +274,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                 </div>
 
                 {/* DB Config */}
-                <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 mb-8">
+                <div className="bg-slate-50 p-6 rounded-box border border-slate-200 mb-8">
                     <h4 className="text-sm font-bold uppercase tracking-wider text-amber-600 mb-4 flex items-center gap-2">
                         🗄️ Подключение к БД (PostgreSQL)
                     </h4>
-                    <p className="text-xs text-slate-400 mb-4">
-                        Эти настройки используются бэкендом для RAG. В демо-режиме браузера используется эмуляция.
-                    </p>
                     
                     <div className="flex items-center gap-2 mb-6">
                         <input 
@@ -226,7 +285,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                            id="mockDb"
                            checked={config.useMockDb}
                            onChange={e => setConfig({...config, useMockDb: e.target.checked})}
-                           className="w-4 h-4 text-sky-600 rounded"
+                           className="w-4 h-4 text-brand-600 rounded"
                         />
                         <label htmlFor="mockDb" className="text-sm font-medium text-slate-700">Использовать Эмуляцию БД (Mock Data)</label>
                     </div>
@@ -235,7 +294,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                          <div>
                             <label className="block text-xs font-bold text-slate-500 mb-2">Host</label>
                             <input 
-                                className="w-full p-3 bg-white border border-slate-200 rounded-lg"
+                                className="w-full p-3 bg-white border border-slate-200 rounded-box"
                                 value={config.dbHost}
                                 onChange={e => setConfig({...config, dbHost: e.target.value})}
                             />
@@ -243,7 +302,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                         <div>
                             <label className="block text-xs font-bold text-slate-500 mb-2">Port</label>
                             <input 
-                                className="w-full p-3 bg-white border border-slate-200 rounded-lg"
+                                className="w-full p-3 bg-white border border-slate-200 rounded-box"
                                 value={config.dbPort}
                                 onChange={e => setConfig({...config, dbPort: e.target.value})}
                             />
@@ -251,7 +310,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                          <div>
                             <label className="block text-xs font-bold text-slate-500 mb-2">User</label>
                             <input 
-                                className="w-full p-3 bg-white border border-slate-200 rounded-lg"
+                                className="w-full p-3 bg-white border border-slate-200 rounded-box"
                                 value={config.dbUser}
                                 onChange={e => setConfig({...config, dbUser: e.target.value})}
                             />
@@ -260,7 +319,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                             <label className="block text-xs font-bold text-slate-500 mb-2">Password</label>
                             <input 
                                 type="password"
-                                className="w-full p-3 bg-white border border-slate-200 rounded-lg"
+                                className="w-full p-3 bg-white border border-slate-200 rounded-box"
                                 value={config.dbPass}
                                 onChange={e => setConfig({...config, dbPass: e.target.value})}
                             />
@@ -268,7 +327,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                          <div>
                             <label className="block text-xs font-bold text-slate-500 mb-2">Database Name</label>
                             <input 
-                                className="w-full p-3 bg-white border border-slate-200 rounded-lg"
+                                className="w-full p-3 bg-white border border-slate-200 rounded-box"
                                 value={config.dbName}
                                 onChange={e => setConfig({...config, dbName: e.target.value})}
                             />
@@ -279,7 +338,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                 <div className="flex justify-end">
                     <button 
                         onClick={handleSaveConfig}
-                        className="bg-sky-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-sky-700 shadow-md"
+                        className="bg-brand-600 text-white px-8 py-3 rounded-box font-bold hover:bg-brand-700 shadow-md"
                     >
                         Сохранить Настройки
                     </button>

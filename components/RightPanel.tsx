@@ -38,7 +38,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
           );
       }
       return (
-          <span className="bg-sky-100 text-sky-800 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide border border-sky-200">
+          <span className="bg-brand-100 text-brand-800 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide border border-brand-200">
             Источник: ИИ
           </span>
       );
@@ -54,16 +54,16 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
     const isLoadingThis = loadingExplanation === `${verseIdx}-${commIdx}`;
 
     return (
-      <div className="mt-4 pt-4 border-t border-sky-50">
+      <div className="mt-4 pt-4 border-t border-brand-50">
         {aiExplanation ? (
           <>
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-1.5 h-1.5 bg-sky-400 rounded-full"></div>
-              <span className="text-[10px] font-bold text-sky-500 uppercase tracking-wide">
+              <div className="w-1.5 h-1.5 bg-brand-400 rounded-full"></div>
+              <span className="text-[10px] font-bold text-brand-500 uppercase tracking-wide">
                 Пояснение Еноха
               </span>
             </div>
-            <p className="text-sm md:text-xs text-slate-600 italic bg-sky-50/50 p-3 rounded-lg border border-sky-50 animate-in fade-in leading-relaxed">
+            <p className="text-sm md:text-xs text-slate-600 italic bg-brand-50/50 p-3 rounded-lg border border-brand-50 animate-in fade-in leading-relaxed">
               {aiExplanation}
             </p>
           </>
@@ -71,15 +71,15 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
           <button 
             onClick={() => handleExplainClick(verseIdx, commIdx, verseText, summary)}
             disabled={isLoadingThis}
-            className="w-full text-left flex items-center justify-center gap-2 p-3 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-600 transition-colors group"
+            className="w-full text-left flex items-center justify-center gap-2 p-3 rounded-lg bg-brand-50 hover:bg-brand-100 text-brand-600 transition-colors group"
           >
             {isLoadingThis ? (
                <span className="flex items-center gap-2 text-xs font-medium">
-                 <span className="w-2 h-2 bg-sky-400 rounded-full animate-bounce"></span>
+                 <span className="w-2 h-2 bg-brand-400 rounded-full animate-bounce"></span>
                  Енох размышляет...
                </span>
             ) : (
-               <span className="text-xs font-medium group-hover:text-sky-700">
+               <span className="text-xs font-medium group-hover:text-brand-700">
                  Пояснить духовный смысл
                </span>
             )}
@@ -91,14 +91,14 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
 
   if (!isOpen) {
     return (
-      <aside className="hidden lg:flex w-96 bg-white border-l border-sky-50 flex-col h-full transition-all duration-300">
-        <div className="p-6 border-b border-sky-50 bg-white">
+      <aside className="hidden lg:flex w-96 bg-white border-l border-brand-50 flex-col h-full transition-all duration-300">
+        <div className="p-6 border-b border-brand-50 bg-white">
            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
             Источники
           </h3>
         </div>
         <div className="flex-1 p-8 flex flex-col items-center justify-center text-center opacity-50">
-           <div className="w-16 h-16 bg-sky-50 rounded-full flex items-center justify-center mb-4 text-sky-200">
+           <div className="w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center mb-4 text-brand-200">
              <BookIcon className="w-8 h-8" />
            </div>
            <p className="font-body text-sm text-slate-400">
@@ -133,7 +133,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
       {/* FULL SCREEN READING MODAL */}
       {currentReading && currentReading.comm && (
         <div className="fixed inset-0 z-[60] bg-white flex flex-col animate-in slide-in-from-bottom-5 fade-in duration-300">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-sky-100 bg-sky-50/30">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-brand-100 bg-brand-50/30">
              <div className="flex items-center gap-2">
                 <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
                    {currentReading.comm.source || "Толкование"}
@@ -149,7 +149,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
           </div>
 
           <div className="flex-1 overflow-y-auto p-6 md:p-12 md:max-w-3xl md:mx-auto w-full">
-            <blockquote className="font-display text-xl md:text-2xl leading-relaxed text-slate-700 italic border-l-4 border-sky-200 pl-6 mb-8">
+            <blockquote className="font-display text-xl md:text-2xl leading-relaxed text-slate-700 italic border-l-4 border-brand-200 pl-6 mb-8">
               «{currentReading.verse.text}»
               <cite className="block text-sm text-slate-400 font-sans font-normal mt-2 not-italic">
                 — {currentReading.verse.reference}
@@ -168,14 +168,14 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
 
             {currentReading.comm.sourceUrl && (
                <div className="mt-8 text-right">
-                 <a href={currentReading.comm.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-sky-500 hover:underline italic">
+                 <a href={currentReading.comm.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-brand-500 hover:underline italic">
                    Читать оригинал на Azbyka.ru →
                  </a>
                </div>
             )}
             
             <div className="h-12"></div>
-            <div className="bg-sky-50/50 rounded-2xl p-6 border border-sky-100">
+            <div className="bg-brand-50/50 rounded-2xl p-6 border border-brand-100">
                {renderAIExplanationBlock(
                  currentReading.vIdx, 
                  currentReading.cIdx, 
@@ -192,12 +192,12 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
       {/* Main Sidebar Content */}
       <aside className={`
         fixed inset-y-0 right-0 z-50 w-full md:w-96 lg:static lg:flex lg:w-96 
-        bg-sky-50/50 border-l border-sky-100 flex flex-col h-full overflow-hidden 
+        bg-brand-50/50 border-l border-brand-100 flex flex-col h-full overflow-hidden 
         shadow-2xl lg:shadow-none transition-transform duration-300 ease-out
         ${isOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
       `}>
-        <div className="p-6 border-b border-sky-100 bg-white/80 backdrop-blur flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sky-600">
+        <div className="p-6 border-b border-brand-100 bg-white/80 backdrop-blur flex items-center justify-between">
+          <div className="flex items-center gap-2 text-brand-600">
             <BookIcon className="w-5 h-5" />
             <h3 className="text-sm font-bold font-display uppercase tracking-wider">
               Источники Истины
@@ -217,7 +217,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
                  const hasCommentaries = verse.commentaries && verse.commentaries.length > 0;
 
                  return (
-                   <div key={idx} className={`bg-white rounded-xl border transition-all duration-300 ${isExpanded ? 'border-sky-300 shadow-md' : 'border-sky-100 hover:border-sky-200'}`}>
+                   <div key={idx} className={`bg-white rounded-xl border transition-all duration-300 ${isExpanded ? 'border-brand-300 shadow-md' : 'border-brand-100 hover:border-brand-200'}`}>
                      <div 
                        className="p-5 cursor-pointer select-none"
                        onClick={() => toggleVerse(idx)}
@@ -232,7 +232,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
                           <ChevronDownIcon className={`w-4 h-4 text-slate-300 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                        </div>
                        
-                       <div className="text-sky-700 font-display font-bold text-sm mb-2 mt-2">
+                       <div className="text-brand-700 font-display font-bold text-sm mb-2 mt-2">
                          {verse.reference}
                        </div>
                        <p className="text-sm font-body text-slate-700 leading-relaxed italic">
@@ -245,7 +245,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
                                target="_blank" 
                                rel="noreferrer" 
                                onClick={(e) => e.stopPropagation()}
-                               className="text-[10px] text-sky-400 mt-2 block hover:underline"
+                               className="text-[10px] text-brand-400 mt-2 block hover:underline"
                              >
                                Открыть на Азбуке →
                              </a>
@@ -254,7 +254,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
 
                      {isExpanded && (
                        hasCommentaries ? (
-                         <div className="border-t border-sky-50 bg-sky-50/30 p-5 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                         <div className="border-t border-brand-50 bg-brand-50/30 p-5 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
                            <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
                              Святоотеческое предание
                            </h5>
@@ -262,8 +262,8 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
                              const isLong = comm.summary.length > 200;
                              
                              return (
-                               <div key={cIdx} className="bg-white p-4 rounded-lg border border-sky-100 shadow-sm relative overflow-hidden group">
-                                 <div className="absolute top-0 left-0 w-1 h-full bg-sky-200"></div>
+                               <div key={cIdx} className="bg-white p-4 rounded-lg border border-brand-100 shadow-sm relative overflow-hidden group">
+                                 <div className="absolute top-0 left-0 w-1 h-full bg-brand-200"></div>
                                  
                                  <div className="flex items-center justify-between mb-2 pl-2">
                                     <span className="bg-slate-100 text-slate-600 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">
@@ -286,7 +286,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
                                    {isLong && (
                                      <button 
                                       onClick={() => setReadingState({vIdx: idx, cIdx})}
-                                      className="flex items-center gap-1 text-[10px] text-sky-600 font-bold uppercase tracking-wide mb-2 hover:text-sky-800 hover:underline"
+                                      className="flex items-center gap-1 text-[10px] text-brand-600 font-bold uppercase tracking-wide mb-2 hover:text-brand-800 hover:underline"
                                      >
                                        <ExpandIcon className="w-3 h-3" />
                                        Читать полностью
@@ -294,7 +294,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
                                    )}
                                    
                                    {comm.sourceUrl && (
-                                        <a href={comm.sourceUrl} target="_blank" rel="noreferrer" className="text-[9px] text-sky-400 italic hover:underline">
+                                        <a href={comm.sourceUrl} target="_blank" rel="noreferrer" className="text-[9px] text-brand-400 italic hover:underline">
                                             Ссылка на источник →
                                         </a>
                                    )}
@@ -308,7 +308,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
                            })}
                          </div>
                        ) : (
-                         <div className="border-t border-sky-50 bg-sky-50/20 p-6 text-center animate-in fade-in">
+                         <div className="border-t border-brand-50 bg-brand-50/20 p-6 text-center animate-in fade-in">
                            <p className="text-xs text-slate-400 italic">
                              Толкований из БД не найдено.
                            </p>
@@ -320,7 +320,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGene
                })}
             </div>
           ) : (
-            <div className="text-center mt-10 p-6 bg-white rounded-2xl border border-sky-100 border-dashed">
+            <div className="text-center mt-10 p-6 bg-white rounded-2xl border border-brand-100 border-dashed">
               <p className="text-sm text-slate-400 italic">
                 Ответ сформирован без прямых цитат из БД.
               </p>

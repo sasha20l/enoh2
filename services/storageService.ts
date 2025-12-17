@@ -15,7 +15,8 @@ const DEFAULT_CONFIG: AppConfig = {
   dbUser: 'postgres',
   dbPass: '',
   dbName: 'enoch_db',
-  useMockDb: true
+  useMockDb: true,
+  currentThemeId: 'sky-soft'
 };
 
 // Initialize defaults
@@ -39,7 +40,9 @@ initStorage();
 export const StorageService = {
   // --- Config ---
   getConfig: (): AppConfig => {
-    return JSON.parse(localStorage.getItem(CONFIG_KEY) || JSON.stringify(DEFAULT_CONFIG));
+    const stored = JSON.parse(localStorage.getItem(CONFIG_KEY) || JSON.stringify(DEFAULT_CONFIG));
+    // Merge with default to ensure new fields (like themeId) exist
+    return { ...DEFAULT_CONFIG, ...stored };
   },
   
   saveConfig: (config: AppConfig) => {

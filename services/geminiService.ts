@@ -1,16 +1,20 @@
 import { GoogleGenAI, Modality, Type } from "@google/genai";
-import { SYSTEM_INSTRUCTION } from "../constants";
+import { BASE_SYSTEM_INSTRUCTION } from "../constants";
 import { StructuredContent } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
 export const generateResponse = async (
   history: { role: string; parts: { text: string }[] }[],
-  currentMessage: string
+  currentMessage: string,
+  modeSystemPrompt: string
 ): Promise<StructuredContent> => {
   try {
     const model = "gemini-2.5-flash"; 
     
+    // Combine Base Dogma + Specific Mode Instructions
+    const fullSystemInstruction = `${BASE_SYSTEM_INSTRUCTION}\n\n${modeSystemPrompt}`;
+
     // Convert history
     const contents = [
       ...history.map(h => ({
@@ -27,8 +31,8 @@ export const generateResponse = async (
       model: model,
       contents: contents,
       config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        temperature: 0.4,
+        systemInstruction: fullSystemInstruction,
+        temperature: 0.3, // Lower temperature for stricter adherence
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -51,11 +55,10 @@ export const generateResponse = async (
                       properties: {
                          author: { type: Type.STRING },
                          summary: { type: Type.STRING },
-                         source: { type: Type.STRING },
-                         // aiExplanation is intentionally removed from required initial generation
+                         source: { type: Type.STRING, description: "Exact book/letter title or 'Обобщение святоотеческого учения' if AI synthesized" },
                          aiExplanation: { type: Type.STRING }
                       },
-                      required: ["author", "summary"]
+                      required: ["author", "summary", "source"]
                     }
                   }
                 },
@@ -88,7 +91,6 @@ export const generateResponse = async (
         parsed = JSON.parse(cleanText);
       } catch (e) {
         console.warn("JSON Parse Failed", cleanText);
-        // Fallback: use the raw text if it looks like a response, stripping braces roughly
         const fallbackText = cleanText.replace(/^[\s\S]*?"pastoralResponse"\s*:\s*"/, '').split('",')[0].replace(/\\"/g, '"');
         return {
              pastoralResponse: fallbackText.length > 10 ? fallbackText : "Простите, ответ был получен, но я не смог его прочитать. Попробуйте перефразировать вопрос.",
@@ -115,7 +117,7 @@ export const generateResponse = async (
           commentaries: Array.isArray(v.commentaries) ? v.commentaries.map((c: any) => ({
              author: c.author || "Неизвестный автор",
              summary: c.summary || "",
-             source: c.source || "",
+             source: c.source || "Обобщение",
              aiExplanation: c.aiExplanation || "" 
           })) : []
         })) : [],
@@ -124,7 +126,6 @@ export const generateResponse = async (
       return safeContent;
     }
     
-    // Case where response.text is undefined (e.g. Safety filter)
     return {
       pastoralResponse: "Простите, я не могу ответить на этот вопрос из-за ограничений безопасности или этики.",
       citedVerses: []
@@ -146,16 +147,16 @@ export const generateCommentaryExplanation = async (
 ): Promise<string> => {
   try {
     const prompt = `
+      ${BASE_SYSTEM_INSTRUCTION}
+      
+      КОНТЕКСТ:
       Вопрос пользователя: "${userQuery}"
-      
       Стих из Писания: "${verseText}"
-      
       Толкование Святого Отца: "${commentarySummary}"
       
       ЗАДАЧА:
-      От имени Еноха (в спокойном, уважительном, светлом тоне) объясни кратко (2-3 предложения), как именно это толкование отвечает на вопрос пользователя.
+      Объясни кратко (2-3 предложения), как именно это толкование отвечает на вопрос пользователя.
       Вскрой духовную логику. Почему это толкование здесь уместно?
-      Не используй сложные термины. Пиши просто, для сердца.
     `;
 
     const response = await ai.models.generateContent({

@@ -1,13 +1,15 @@
 import React from 'react';
 import { FOLDERS } from '../constants';
-import { ChatSession } from '../types';
+import { ChatSession, User } from '../types';
 import { BookIcon, ScrollIcon, PrayIcon, MenuIcon } from './Icons';
 
 interface SidebarProps {
   chats: ChatSession[];
   activeChatId: string;
+  currentUser: User | null;
   onSelectChat: (id: string) => void;
   onNewChat: () => void;
+  onOpenAdmin: () => void;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -21,7 +23,16 @@ const getIcon = (iconName: string, className: string) => {
   }
 };
 
-export const Sidebar: React.FC<SidebarProps> = ({ chats, activeChatId, onSelectChat, onNewChat, isOpen, onClose }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ 
+  chats, 
+  activeChatId, 
+  currentUser,
+  onSelectChat, 
+  onNewChat, 
+  onOpenAdmin,
+  isOpen, 
+  onClose 
+}) => {
   return (
     <>
       {/* Mobile Overlay */}
@@ -60,6 +71,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ chats, activeChatId, onSelectC
 
         {/* Folder Navigation */}
         <div className="flex-1 overflow-y-auto p-4 space-y-8">
+          {/* Admin Button in Sidebar (Visible if admin) */}
+          {currentUser?.isAdmin && (
+             <div className="px-2 mb-4">
+                <button 
+                  onClick={() => { onOpenAdmin(); onClose(); }}
+                  className="w-full flex items-center gap-2 px-4 py-3 bg-slate-800 text-white rounded-xl shadow-md hover:bg-slate-700 transition-colors"
+                >
+                  <span className="text-lg">⚙️</span>
+                  <span className="text-xs font-bold uppercase tracking-wider">Админ-панель</span>
+                </button>
+             </div>
+          )}
+
           {FOLDERS.map(folder => {
             const folderChats = chats.filter(c => c.folder === folder.id);
             if (folderChats.length === 0 && folder.id !== 'general') return null;
@@ -101,10 +125,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ chats, activeChatId, onSelectC
         <div className="p-4 border-t border-slate-50 bg-slate-50/50">
           <div className="flex items-center gap-3 text-sm">
              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-sky-400 to-sky-600 text-white flex items-center justify-center font-bold shadow-md">
-               А
+               {currentUser?.name[0].toUpperCase()}
              </div>
-             <div>
-               <p className="font-semibold text-slate-700">Алексий</p>
+             <div className="overflow-hidden">
+               <p className="font-semibold text-slate-700 truncate">{currentUser?.name}</p>
                <p className="text-xs text-slate-400">В поиске истины</p>
              </div>
           </div>

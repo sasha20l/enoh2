@@ -35,8 +35,10 @@ export interface Message {
 
 export interface ChatSession {
   id: string;
+  userId: string;
   title: string;
   folder?: string;
+  modeId: string; // Which mode was used for this chat
   createdAt: Date;
   messages: Message[];
 }
@@ -45,4 +47,18 @@ export interface UserSettings {
   voiceEnabled: boolean;
   voiceName: string;
   theme: 'light';
+}
+
+export interface User {
+  id: string;
+  name: string;
+  isAdmin: boolean;
+}
+
+export interface ChatMode {
+  id: string;
+  name: string;
+  description: string;
+  systemPrompt: string; // Specific instructions for this mode
+  icon: string; // Icon name
 }

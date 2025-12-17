@@ -6,7 +6,7 @@ import { RightPanel } from './components/RightPanel';
 import { MenuIcon } from './components/Icons';
 import { ChatSession, Message, MessageRole, StructuredContent } from './types';
 import { MOCK_CHATS_INITIAL } from './constants';
-import { generateResponse, generateSpeech, playAudio } from './services/geminiService';
+import { generateResponse, generateSpeech, playAudio, generateCommentaryExplanation } from './services/geminiService';
 
 const App: React.FC = () => {
   const [chats, setChats] = useState<ChatSession[]>(MOCK_CHATS_INITIAL);
@@ -40,9 +40,6 @@ const App: React.FC = () => {
 
     try {
       // Prepare history: Use the CURRENT state of messages before the API call + the new user message
-      // Note: activeChat from closure is stale if we rely on it directly for the *latest* state in a rapid fire, 
-      // but here it's fine as we just added userMsg.
-      
       const currentMessages = [...activeChat.messages, userMsg];
       
       const history = activeChat.messages.map(m => {
@@ -70,7 +67,6 @@ const App: React.FC = () => {
       setChats(prev => prev.map(chat => {
         if (chat.id === activeChatId) {
           const newTitle = chat.messages.length <= 1 ? text.substring(0, 30) + '...' : chat.title;
-          // IMPORTANT: Only add modelMsg, assuming userMsg was added in the optimistic update
           return { ...chat, title: newTitle, messages: [...chat.messages, modelMsg] };
         }
         return chat;
@@ -125,6 +121,46 @@ const App: React.FC = () => {
     }
   };
 
+  const handleGenerateExplanation = async (messageId: string, verseIdx: number, commentaryIdx: number, verseText: string, summary: string) => {
+    // Determine the user's last question for context (simplification: take the last user message)
+    const userMessages = activeChat.messages.filter(m => m.role === MessageRole.USER);
+    const lastUserQuery = userMessages.length > 0 ? (userMessages[userMessages.length - 1].content as string) : "духовный смысл";
+
+    const explanation = await generateCommentaryExplanation(lastUserQuery, verseText, summary);
+
+    // Update the state deeply
+    setChats(prev => prev.map(chat => {
+      if (chat.id === activeChatId) {
+        return {
+          ...chat,
+          messages: chat.messages.map(msg => {
+            if (msg.id === messageId && typeof msg.content !== 'string') {
+              // Clone deep structure
+              const newContent = { ...msg.content };
+              if (newContent.citedVerses && newContent.citedVerses[verseIdx]) {
+                const newVerses = [...newContent.citedVerses];
+                const verse = { ...newVerses[verseIdx] };
+                if (verse.commentaries && verse.commentaries[commentaryIdx]) {
+                  const newCommentaries = [...verse.commentaries];
+                  newCommentaries[commentaryIdx] = {
+                    ...newCommentaries[commentaryIdx],
+                    aiExplanation: explanation
+                  };
+                  verse.commentaries = newCommentaries;
+                  newVerses[verseIdx] = verse;
+                  newContent.citedVerses = newVerses;
+                  return { ...msg, content: newContent };
+                }
+              }
+            }
+            return msg;
+          })
+        };
+      }
+      return chat;
+    }));
+  };
+
   return (
     <div className="flex h-screen overflow-hidden bg-[#FAFAF9]">
       <Sidebar 
@@ -174,6 +210,7 @@ const App: React.FC = () => {
       <RightPanel 
         message={selectedMessage} 
         onClose={() => setSelectedMessageId(null)} 
+        onGenerateExplanation={handleGenerateExplanation}
       />
     </div>
   );

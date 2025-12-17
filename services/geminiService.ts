@@ -52,9 +52,10 @@ export const generateResponse = async (
                          author: { type: Type.STRING },
                          summary: { type: Type.STRING },
                          source: { type: Type.STRING },
+                         // aiExplanation is intentionally removed from required initial generation
                          aiExplanation: { type: Type.STRING }
                       },
-                      required: ["author", "summary", "aiExplanation"]
+                      required: ["author", "summary"]
                     }
                   }
                 },
@@ -115,7 +116,7 @@ export const generateResponse = async (
              author: c.author || "Неизвестный автор",
              summary: c.summary || "",
              source: c.source || "",
-             aiExplanation: c.aiExplanation || ""
+             aiExplanation: c.aiExplanation || "" 
           })) : []
         })) : [],
       };
@@ -135,6 +136,40 @@ export const generateResponse = async (
       pastoralResponse: "Простите, произошла ошибка связи. Пожалуйста, попробуйте еще раз.",
       citedVerses: []
     };
+  }
+};
+
+export const generateCommentaryExplanation = async (
+  userQuery: string,
+  verseText: string,
+  commentarySummary: string
+): Promise<string> => {
+  try {
+    const prompt = `
+      Вопрос пользователя: "${userQuery}"
+      
+      Стих из Писания: "${verseText}"
+      
+      Толкование Святого Отца: "${commentarySummary}"
+      
+      ЗАДАЧА:
+      От имени Еноха (в спокойном, уважительном, светлом тоне) объясни кратко (2-3 предложения), как именно это толкование отвечает на вопрос пользователя.
+      Вскрой духовную логику. Почему это толкование здесь уместно?
+      Не используй сложные термины. Пиши просто, для сердца.
+    `;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [{ parts: [{ text: prompt }] }],
+      config: {
+        temperature: 0.4,
+      }
+    });
+
+    return response.text || "Простите, не удалось сформировать пояснение.";
+  } catch (error) {
+    console.error("Explanation Gen Error:", error);
+    return "Простите, сейчас я не могу пояснить это толкование.";
   }
 };
 

@@ -5,17 +5,29 @@ import { BookIcon, ChevronDownIcon, CrossIcon } from './Icons';
 interface RightPanelProps {
   message: Message | null;
   onClose: () => void;
+  onGenerateExplanation: (messageId: string, verseIdx: number, commentaryIdx: number, verseText: string, summary: string) => void;
 }
 
-export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose }) => {
+export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose, onGenerateExplanation }) => {
   const [expandedVerseIndex, setExpandedVerseIndex] = useState<number | null>(null);
+  // Track loading state for specific commentary explanation: `${verseIdx}-${commIdx}`
+  const [loadingExplanation, setLoadingExplanation] = useState<string | null>(null);
 
   useEffect(() => {
     // Reset expansion when message changes
     setExpandedVerseIndex(null);
+    setLoadingExplanation(null);
   }, [message?.id]);
 
   const isOpen = !!message && message.role === MessageRole.MODEL && typeof message.content !== 'string';
+
+  const handleExplainClick = async (verseIdx: number, commIdx: number, verseText: string, summary: string) => {
+    if (!message) return;
+    const key = `${verseIdx}-${commIdx}`;
+    setLoadingExplanation(key);
+    await onGenerateExplanation(message.id, verseIdx, commIdx, verseText, summary);
+    setLoadingExplanation(null);
+  };
 
   // Desktop Placeholder State (When no message selected)
   if (!isOpen) {
@@ -116,47 +128,70 @@ export const RightPanel: React.FC<RightPanelProps> = ({ message, onClose }) => {
                            <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
                              Святоотеческое предание
                            </h5>
-                           {verse.commentaries.map((comm, cIdx) => (
-                             <div key={cIdx} className="bg-white p-4 rounded-lg border border-sky-100 shadow-sm relative overflow-hidden">
-                               {/* Decorative accent */}
-                               <div className="absolute top-0 left-0 w-1 h-full bg-sky-200"></div>
-                               
-                               <div className="flex items-center gap-2 mb-2 pl-2">
-                                  <span className="bg-slate-100 text-slate-600 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">
-                                    Источник
-                                  </span>
-                               </div>
-
-                               <div className="pl-2">
-                                 <div className="font-display font-bold text-sm text-slate-800 mb-1">
-                                   {comm.author}
+                           {verse.commentaries.map((comm, cIdx) => {
+                             const isLoadingThis = loadingExplanation === `${idx}-${cIdx}`;
+                             
+                             return (
+                               <div key={cIdx} className="bg-white p-4 rounded-lg border border-sky-100 shadow-sm relative overflow-hidden">
+                                 {/* Decorative accent */}
+                                 <div className="absolute top-0 left-0 w-1 h-full bg-sky-200"></div>
+                                 
+                                 <div className="flex items-center gap-2 mb-2 pl-2">
+                                    <span className="bg-slate-100 text-slate-600 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">
+                                      Источник
+                                    </span>
                                  </div>
-                                 <p className="text-xs font-body text-slate-600 leading-relaxed mb-2">
-                                   {comm.summary}
-                                 </p>
-                                 {comm.source && (
-                                   <p className="text-[10px] text-sky-400 italic text-right">
-                                     — {comm.source}
+
+                                 <div className="pl-2">
+                                   <div className="font-display font-bold text-sm text-slate-800 mb-1">
+                                     {comm.author}
+                                   </div>
+                                   <p className="text-xs font-body text-slate-600 leading-relaxed mb-2">
+                                     {comm.summary}
                                    </p>
-                                 )}
-                               </div>
-
-                               {/* Enoch's Explanation (AI) */}
-                               {comm.aiExplanation && (
-                                 <div className="mt-3 pt-3 border-t border-sky-50 ml-2">
-                                    <div className="flex items-center gap-1.5 mb-1.5">
-                                      <div className="w-1.5 h-1.5 bg-sky-400 rounded-full"></div>
-                                      <span className="text-[9px] font-bold text-sky-500 uppercase tracking-wide">
-                                        Пояснение Еноха
-                                      </span>
-                                    </div>
-                                    <p className="text-xs text-slate-500 italic bg-sky-50/50 p-2 rounded-md border border-sky-50">
-                                      {comm.aiExplanation}
-                                    </p>
+                                   {comm.source && (
+                                     <p className="text-[10px] text-sky-400 italic text-right">
+                                       — {comm.source}
+                                     </p>
+                                   )}
                                  </div>
-                               )}
-                             </div>
-                           ))}
+
+                                 {/* Enoch's Explanation (AI) - Lazy Load */}
+                                 <div className="mt-3 pt-3 border-t border-sky-50 ml-2">
+                                    {comm.aiExplanation ? (
+                                      <>
+                                        <div className="flex items-center gap-1.5 mb-1.5">
+                                          <div className="w-1.5 h-1.5 bg-sky-400 rounded-full"></div>
+                                          <span className="text-[9px] font-bold text-sky-500 uppercase tracking-wide">
+                                            Пояснение Еноха
+                                          </span>
+                                        </div>
+                                        <p className="text-xs text-slate-500 italic bg-sky-50/50 p-2 rounded-md border border-sky-50 animate-in fade-in">
+                                          {comm.aiExplanation}
+                                        </p>
+                                      </>
+                                    ) : (
+                                      <button 
+                                        onClick={() => handleExplainClick(idx, cIdx, verse.text, comm.summary)}
+                                        disabled={isLoadingThis}
+                                        className="w-full text-left flex items-center justify-center gap-2 p-2 rounded-md bg-sky-50 hover:bg-sky-100 text-sky-600 transition-colors group"
+                                      >
+                                        {isLoadingThis ? (
+                                           <span className="flex items-center gap-2 text-xs font-medium">
+                                             <span className="w-2 h-2 bg-sky-400 rounded-full animate-bounce"></span>
+                                             Енох размышляет...
+                                           </span>
+                                        ) : (
+                                           <span className="text-xs font-medium group-hover:text-sky-700">
+                                             Пояснить духовный смысл
+                                           </span>
+                                        )}
+                                      </button>
+                                    )}
+                                 </div>
+                               </div>
+                             );
+                           })}
                          </div>
                        ) : (
                          <div className="border-t border-sky-50 bg-sky-50/20 p-6 text-center animate-in fade-in">
